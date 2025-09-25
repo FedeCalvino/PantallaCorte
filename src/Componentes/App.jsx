@@ -1,19 +1,13 @@
-import { React, useState, useEffect, useNavigate } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
-import { CrearVenta } from '../Routes/CrearVenta';
-import { Clientes } from '../Routes/Clientes';
+import { React, useState, useEffect } from 'react';
+import {  Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from '../Routes/ProtectedRoute';
 import { useDispatch } from 'react-redux';
-import { Ventas } from '../Routes/Ventas';
 import "../Routes/Css/App.css"
 import { Login } from '../Routes/Login';
-import { Instalaciones } from './Instalaciones';
 import {setRollerConfig,setRielConfig,setTradicionalConfig} from "../Features/ConfigReducer"
 import {setTelasRollerFeature,setTelasTradicionalFeature} from "../Features/TelasReducer"
-import { Ordenes } from '../Routes/Ordenes';
-import { Lotes } from '../Routes/Lotes';
 import { Toaster, toast } from "react-hot-toast";
-import { CrearVentaObra } from '../Routes/CrearVentaObra';
+import { PantallaCorteTela } from '../Routes/PantallaCorteTela';
 const App = () => {
     
     const dispatch = useDispatch()
@@ -24,13 +18,12 @@ const App = () => {
     });
 
     const urlIP = import.meta.env.REACT_APP__IPSQL;
-
-    const UrlTipoConfig = "/ConfiguracionEP"
-    const UrlTelas = "/TelasEP"
 /*
-  const UrlTipoConfig = "http://localhost:8086/Conf"
-    const UrlTelas = "http://localhost:8086/Telas"
-  */ 
+    const UrlTipoConfig = "/ConfiguracionEP"
+    const UrlTelas = "/TelasEP"*/
+  const UrlTipoConfig = "http://200.40.89.254:8086/Conf"
+    const UrlTelas = "http://200.40.89.254:8086/Telas"
+   
     const fetchRollerConf = async () => {
       try {
         const res = await fetch(UrlTipoConfig);
@@ -117,56 +110,22 @@ const App = () => {
     return (
         <div className='AppContainer'>
             <Routes>
-                <Route path='/Clientes' element={
-                    <ProtectedRoute user={User} login={login}>
-                        <Clientes />
-                    </ProtectedRoute>
-                } >
-                </Route>
-                <Route path='/CrearVenta' element={
-                <ProtectedRoute user={User} login={login}>
-                    <CrearVentaObra />
-                </ProtectedRoute>
-                } >
-
-                </Route>
+                
                 <Route path='/Login' element={
                     <ProtectedRoute user={User} login={login}>
                         <Login/>
                     </ProtectedRoute>
                 }>
-                    </Route>
-                <Route path='/Ventas' element={
-                    <ProtectedRoute user={User} login={login}>
-                        <Ventas/>
-                    </ProtectedRoute>
-                } >
                 </Route>
-
-                <Route path='/*' element={
+                <Route path='/PantallaCorteTela' element={
                     <ProtectedRoute user={User} login={login}>
-                       <CrearVentaObra />
+                       <PantallaCorteTela/>
                     </ProtectedRoute>} >
                     
                 </Route>
-
-                <Route path='/Instalaciones' element={
+                <Route path='/' element={
                     <ProtectedRoute user={User} login={login}>
-                       <Instalaciones />
-                    </ProtectedRoute>} >
-                    
-                </Route>
-
-                <Route path='/Lotes' element={
-                    <ProtectedRoute user={User} login={login}>
-                       <Lotes/>
-                    </ProtectedRoute>} >
-                    
-                </Route>
-
-                <Route path='/Ordenes' element={
-                    <ProtectedRoute user={User} login={login}>
-                       <Ordenes/>
+                       <PantallaCorteTela/>
                     </ProtectedRoute>} >
                     
                 </Route>

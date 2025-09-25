@@ -21,7 +21,7 @@
     },
     {
       "source": "/VentasEP/:path*",
-      "destination": "http://200.40.89.254:8086/Ventas/:path*"
+      "destination": "http://200.40.89.254:8081/Ventas/:path*"
     },
     {
       "source": "/LoteEp/:path*",
@@ -57,7 +57,7 @@
     },
     {
       "source": "/OrdenEp/:path*",
-      "destination": "http://200.40.89.254:8088/Orden/:path*"
+      "destination": "http://200.40.89.254:8081/Orden/:path*"
     },
     {
       "source": "/CortinaEp/:path*",

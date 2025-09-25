@@ -3,18 +3,17 @@ import "../Routes/Css/ventaView.css";
 import { useState, useEffect, useRef } from "react";
 import { Table, Button, Row, Col } from "react-bootstrap";
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
+
 import { OrdenProduccion } from "./OrdenProduccion";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import { useSelector } from "react-redux";
-import Form from "react-bootstrap/Form";
 import {
   selectArticulos,
   selectVenta,
   setArticulos,
   setVenta,
 } from "../Features/VentaViewReucer";
-import { FormRollers } from "../Forms/FormRollers";
 import { EditarCortina } from "./EditarCortina";
 import {
   selectRollerConfig,
@@ -23,21 +22,21 @@ import {
 } from "../Features/ConfigReducer";
 import {
   selectTelasRoller,
-  selectTelas,
   selectTelasTradicional,
 } from "../Features/TelasReducer";
 import { useDispatch } from "react-redux";
 import { Loading } from "./Loading";
 import { TicketCortina } from "./TicketCortina";
 import { OrdenInstalacion } from "./OrdenInstalacion";
-import { EditarRiel } from "./EditarRiel";
-import { EditarTradicional } from "./EditarTradicional";
-import { AgregarArticulo } from "./AgregarArticulo";
-import { Editor } from "@tinymce/tinymce-react";
 import html2pdf from "html2pdf.js";
-import html2canvas from "html2canvas";
 
-export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfirmPaso,setUndoPaso}) => {
+export const VentaViewPantallaCorte = ({
+  callBackToast,
+  ConfirmPaso,
+  setConfirmPaso,
+  setUndoPaso,
+  Ordenes,
+}) => {
   const dispatch = useDispatch();
 
   const ConfigRoller = useSelector(selectRollerConfig);
@@ -78,6 +77,7 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
 
   const [showModEditVenal, setEditVen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [loadingSetPaso, setloadingSetPaso] = useState(false);
   const [showModalRiel, setshowModalRiel] = useState(false);
   const [agregarArt, setagregarArt] = useState(false);
   const Articulos = useSelector(selectArticulos);
@@ -118,7 +118,6 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
 
   const Ven = useSelector(selectVenta);
   console.log("Ven", Ven);
-
   //Edit Venta
   const [ObraEdit, setObraEdit] = useState(Ven.obra?.nombre);
   const [FechaInstEdit, setFechaInstEdit] = useState(Ven.fechaInstalacion);
@@ -138,6 +137,7 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
       setTradicionalTryEdited(null);
       setRielTryEdited(null);
       setCortrtinaTrtyEdited(Art);
+      console.log("Art", Art);
     }
     if (Art.nombre === "Riel") {
       setCortrtinaTrtyEdited(null);
@@ -150,9 +150,8 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
       setTradicionalTryEdited(Art);
       setcontenido(Art.contenidoProduccion);
     }
-  
+    console.log(findOrden(Art.IdArticulo));
     setShowModal(true);
-  
   };
 
   const ShowModalCallB = () => {
@@ -173,18 +172,6 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
 
   const handleClose = () => setShowModal(false);
   const handleCloseRiel = () => setshowModalRiel(false);
-
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "80%",
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-  };
 
   /*tabla tradicional*/
 
@@ -261,6 +248,12 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
   };
   const findNameMotor = (idMotor) => {
     return Motores?.find((motor) => motor.idMotor === idMotor)?.nombre;
+  };
+  const findTerminada = (idArt) => {
+    return Ordenes?.find((ord) => ord.idArticulo === idArt)?.terminada;
+  };
+  const findOrden = (idArt) => {
+    return Ordenes?.find((ord) => ord.idArticulo === idArt);
   };
   const findNamePos = (idPos) => {
     return Posiciones?.find((pos) => pos.posicionId === idPos)?.posicion;
@@ -543,6 +536,54 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
     downloadPDFInstalacion(ven);
   };
 
+  const Setpaso = async () => {
+    setloadingSetPaso(true);
+    const idPasoOrden = findOrden(CortrtinaTrtyEdited.IdArticulo).idPasoOrden;
+    console.log("idPasoOrden", idPasoOrden);
+    const url =
+      "/OrdenEp/PasoOrden/Completar/" + idPasoOrden;
+    const requestOptions = {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    };
+    try {
+      const response = await fetch(url, requestOptions);
+      const result = await response.json();
+
+      console.log(result);
+      setConfirmPaso();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error actualizando el paso:", error);
+    } finally {
+      setloadingSetPaso(false);
+    }
+  };
+
+  const DeSetpaso = async () => {
+    setloadingSetPaso(true);
+    const idPasoOrden = findOrden(CortrtinaTrtyEdited.IdArticulo).idPasoOrden;
+    console.log("idPasoOrden", idPasoOrden);
+    const url =
+      "/OrdenEp/PasoOrden/DesCompletar/" + idPasoOrden;
+    const requestOptions = {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    };
+    try {
+      const response = await fetch(url, requestOptions);
+      const result = await response.json();
+
+      console.log(result);
+      setUndoPaso();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error actualizando el paso:", error);
+    } finally {
+      setloadingSetPaso(false);
+    }
+  };
+
   const downloadPDFInstalacion = async (Ven) => {
     const blob = await pdf(<OrdenInstalacion Venta={Ven} />).toBlob();
 
@@ -624,9 +665,7 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
       };
 
       // Generar y descargar el PDF
-      const blob = await pdf(
-        <OrdenProduccion Venta={venRomana} />
-      ).toBlob();
+      const blob = await pdf(<OrdenProduccion Venta={venRomana} />).toBlob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `${Ven.Datos.cliNomb} Orden De Corte Romanas ${Ven.fecha}.pdf`;
@@ -637,9 +676,15 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
       setTimeout(() => URL.revokeObjectURL(link.href), 100); // Limpieza posterior
     }
   };
-  const ConfirmarCor =()=>{
+  const ObtenerFecha = (fecha) => {
+    const date = new Date(fecha);
 
-  }
+    // obtener día y mes con padStart para que tengan 2 dígitos
+    const dia = date.getDate(); // número: 23
+    const diamasuno = String(dia + 1).padStart(2, "0"); // "24"
+    const mes = String(date.getMonth() + 1).padStart(2, "0");
+    return `${diamasuno}-${mes}`;
+  };
 
   const downloadTicket = async () => {
     console.log("Ven", Ven);
@@ -744,18 +789,37 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
     }
   };
 
+  const getBorder = () => {
+    if (!CortrtinaTrtyEdited?.IdArticulo) return "none";
+    return findTerminada(CortrtinaTrtyEdited?.IdArticulo)
+      ? "5px solid green"
+      : "5px solid red";
+  };
+
+  const style = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "80%",
+    bgcolor: "background.paper",
+    border: "1px solid black",
+    boxShadow: 24,
+    p: 4,
+  };
+
   return (
     <>
-      {
-        <Modal
-          open={showModal}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-          disableEnforceFocus
-          disableAutoFocus
-        >
-          <Box sx={style}>
+      <Modal
+        open={showModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+        disableEnforceFocus
+        disableAutoFocus
+      >
+        <Box sx={style}>
+          <div>
             <div>
               <h2>
                 {CortrtinaTrtyEdited && CortrtinaTrtyEdited.nombre}{" "}
@@ -797,7 +861,7 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
                           null}
                       </td>
                       <td>{findTela(CortrtinaTrtyEdited.IdTipoTela)?.color}</td>
-                      <td>{CortrtinaTrtyEdited.Ancho}</td>
+                      <td>{CortrtinaTrtyEdited.ancho}</td>
                       <td>{CortrtinaTrtyEdited.AnchoTela}</td>
                       <td>{CortrtinaTrtyEdited.AnchoTubo}</td>
                       <td>{findNameCano(CortrtinaTrtyEdited.cano.id)}</td>
@@ -824,126 +888,21 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
             )}
             {ShowModalConfirmPaso && (
               <>
-              <Button variant="secondary" onClick={handleClose}>
-              Cancelar
-              </Button>
-              <Button variant="primary" onClick={() => EditCor()}>
-                Confirmar
-              </Button>
-            </>
-            )}
-            {RielTryEdited && (
-              <Table responsive bordered>
-                <thead
-                  style={{
-                    justifyContent: "center",
-                    fontFamily: "Arial, sans-serif",
-                  }}
-                >
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Num</th>
-                    <th>Ambiente</th>
-                    <th>Ancho</th>
-                    <th>Tipo de Riel</th>
-                    <th>Soporte</th>
-                    <th>Bastones</th>
-                    <th>Acumula</th>
-                    <th>Detalle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr key={RielTryEdited.idCortina}>
-                    <td>{RielTryEdited.nombre}</td>
-                    <td>{RielTryEdited.IdArticulo}</td>
-                    <td>{RielTryEdited.ambiente}</td>
-                    <td>{RielTryEdited.ancho}</td>
-                    <td>{findNameTipoRiel(RielTryEdited.tipoRiel.tipoId)}</td>
-                    <td>{RielTryEdited.soportes.nombre}</td>
-                    <td>{RielTryEdited.bastones.nombre}</td>
-                    <td>
-                      {findNameladoAcumula(
-                        RielTryEdited.ladoAcumula.ladoAcumulaId
-                      )}
-                    </td>
-                    <td>{RielTryEdited.detalle}</td>
-                  </tr>
-                </tbody>
-              </Table>
-            )}
-            {TradicionalTryEdited && (
-              <>
-                <Table responsive bordered>
-                  <thead>
-                    <tr>
-                      <th>Tipo</th>
-                      <th>Num</th>
-                      <th>Ambiente</th>
-                      <th>Tela</th>
-                      <th>Color</th>
-                      <th>Pinza</th>
-                      <th>Gancho</th>
-                      <th>Paños</th>
-                      <th>Ancho</th>
-                      <th>Ancho Izquierdo</th>
-                      <th>Ancho Derecho</th>
-                      <th>Alto</th>
-                      <th>Alto Izquierdo</th>
-                      <th>Alto Derecho</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr key={TradicionalTryEdited.numeroArticulo}>
-                      <td>{TradicionalTryEdited.nombre}</td>
-                      <td>{TradicionalTryEdited.numeroArticulo}</td>
-                      <td>{TradicionalTryEdited.Ambiente}</td>
-                      <td>
-                        {findTelaTradi(TradicionalTryEdited.IdTipoTela)?.nombre}
-                      </td>
-                      <td>
-                        {findTelaTradi(TradicionalTryEdited.IdTipoTela)?.color}
-                      </td>
-                      <td>
-                        {findNameTipoPinza(TradicionalTryEdited.Pinza?.idPinza)}
-                      </td>
-                      <td>
-                        {findNameTipoGancho(
-                          TradicionalTryEdited.ganchos?.idGanchos
-                        )}
-                      </td>
-                      <td>{TradicionalTryEdited.cantidadPanos}</td>
-                      <td>{getAncho(TradicionalTryEdited)}</td>
-                      <td>{getAnchoIzquierdo(TradicionalTryEdited)}</td>
-                      <td>{getAnchoDerecho(TradicionalTryEdited)}</td>
-                      <td>{getAlto(TradicionalTryEdited)}</td>
-                      <td>{getAltoIzquierdo(TradicionalTryEdited)}</td>
-                      <td>{getAltoDerecho(TradicionalTryEdited)}</td>
-                    </tr>
-                  </tbody>
-                </Table>
-                <Row>
-                  <Col>
-                    <h3>Orden</h3>
-                    <div
-                      style={{
-                        padding: "1rem",
-                        fontFamily: "Arial",
-                        fontSize: "12pt",
-                        border: "1px solid #ccc",
-                        borderRadius: "5px",
-                        backgroundColor: "#f9f9f9",
-                      }}
-                      dangerouslySetInnerHTML={{ __html: contenido }}
-                    />
-                  </Col>
-                  <Col>
-                    <h3>Instalacion</h3>
-                    <p>{TradicionalTryEdited.detalleInstalacion}</p>
-                  </Col>
-                </Row>
+                <Button variant="secondary" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                {findTerminada(CortrtinaTrtyEdited.IdArticulo) ? (
+                  <Button variant="primary" onClick={() => Setpaso()}>
+                    Terminar
+                  </Button>
+                ) : (
+                  <Button variant="primary" onClick={() => DeSetpaso()}>
+                    Deshacer
+                  </Button>
+                )}
               </>
             )}
-            {agregarArt && <AgregarArticulo />}
+
             <div
               style={{
                 display: "flex",
@@ -952,21 +911,49 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
               }}
             >
               <Button variant="secondary" onClick={handleClose}>
-                Cancelar
+                Volver
               </Button>
-              {ConfirmPaso ? 
-                <Button variant="primary" onClick={() => ConfirmarCor()}>
-                Confirmar
-              </Button>
-                  :
-              <Button variant="primary" onClick={() => EditCor()}>
-                Editar
-              </Button>
-              }
+
+              <div>
+                {CortrtinaTrtyEdited?.IdArticulo && (
+                  <div
+                    style={{
+                      backgroundColor: findTerminada(
+                        CortrtinaTrtyEdited.IdArticulo
+                      )
+                        ? "#d4edda"
+                        : "#f8d7da",
+                      color: findTerminada(CortrtinaTrtyEdited.IdArticulo)
+                        ? "#155724"
+                        : "#721c24",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      display: "inline-block",
+                    }}
+                  >
+                    {findTerminada(CortrtinaTrtyEdited.IdArticulo)
+                      ? "Terminada"
+                      : "Sin terminar"}
+                  </div>
+                )}
+              </div>
+              {loadingSetPaso ? (
+                <Loading tipo="small" />
+              ) : findTerminada(CortrtinaTrtyEdited?.IdArticulo) ? (
+                <Button variant="primary" onClick={() => DeSetpaso()}>
+                  Deshacer
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={() => Setpaso()}>
+                  Terminar
+                </Button>
+              )}
             </div>
-          </Box>
-        </Modal>
-      }
+          </div>
+        </Box>
+      </Modal>
 
       {openEdit ? (
         <>
@@ -978,440 +965,161 @@ export const VentaView = ({ callBackToast, callBackAddArt ,ConfirmPaso,setConfir
               CortinaEditedFnct={CortinaEditedFnct}
             />
           )}
-          {RielEdited && (
-            <EditarRiel
-              callBackCancel={ShowModalCallB}
-              rielEdited={RielEdited}
-              callBacktoast={callBacktoast}
-              CortinaEditedFnct={CortinaEditedFnct}
-            />
-          )}
-          {TradiEdited && (
-            <EditarTradicional
-              callBackCancel={ShowModalCallB}
-              tradiEdited={TradiEdited}
-              callBacktoast={callBacktoast}
-              CortinaEditedFnct={CortinaEditedFnct}
-            />
-          )}
         </>
       ) : (
         <>
-          {showModEditVenal ? (
-            <>
-              <Row
-                className="align-items-center py-3"
-                style={{ backgroundColor: "#f8f9fa", borderRadius: "8px" }}
-              >
-                <Col xs={12} md={3} className="text-center">
-                  <h1
-                    style={{
-                      fontSize: "2rem",
-                      fontWeight: "bold",
-                      color: "#343a40",
-                    }}
-                  >
-                    {Ven.obra.cliente ? Ven.obra.cliente.nombre : null}
-                  </h1>
-                </Col>
-                <Col xs={12} md={3} className="text-center">
-                  <div className="d-flex align-items-center justify-content-center">
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "500",
-                        color: "#495057",
-                      }}
-                    >
-                      Instalación:
-                    </span>
-                    <Form.Control
-                      type="date"
-                      value={FechaInstEdit}
-                      style={{
-                        marginLeft: "10px",
-                        textAlign: "center",
-                        borderRadius: "10px",
-                        maxWidth: "150px",
-                      }}
-                      onChange={(e) => setFechaInstEdit(e.target.value)}
-                    />
-                  </div>
-                </Col>
-                <Col xs={12} md={3} className="text-center">
-                  <div className="d-flex align-items-center justify-content-center">
-                    <h3
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "500",
-                        color: "#495057",
-                        marginRight: "10px",
-                      }}
-                    >
-                      Obra:
-                    </h3>
-                    <input
-                      type="text"
-                      value={ObraEdit}
-                      size={30}
-                      onChange={(e) => setObraEdit(e.target.value)}
-                      style={{
-                        borderRadius: "5px",
-                        textAlign: "center",
-                        maxWidth: "200px",
-                      }}
-                    />
-                  </div>
-                </Col>
-                <Col xs={12} md={3} className="text-center">
-                  {loadingAct ? (
-                    <Loading tipo="small" />
-                  ) : (
-                    <div className="d-flex justify-content-center">
-                      <Button
-                        variant="primary"
-                        onClick={() => setEditVen(false)}
-                        style={{ marginRight: "10px", backgroundColor: "red" }}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button variant="primary" onClick={confirmEditVen}>
-                        Confirmar
-                      </Button>
-                    </div>
-                  )}
-                </Col>
-              </Row>
-              <Row
-                className="align-items-center py-3"
-                style={{ backgroundColor: "#f8f9fa", borderRadius: "8px" }}
-              >
-                <Col xs={12} md={12} className="text-center">
-                  <div className="d-flex align-items-center justify-content-center">
-                    <h3
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "500",
-                        color: "#495057",
-                        marginRight: "10px",
-                      }}
-                    >
-                      Direccion:
-                    </h3>
-                    <input
-                      type="text"
-                      value={DireccionEdit}
-                      size={30}
-                      onChange={(e) => setDireccionEdit(e.target.value)}
-                      style={{
-                        borderRadius: "5px",
-                        textAlign: "center",
-                        maxWidth: "450px",
-                      }}
-                    />
-                  </div>
-                </Col>
-              </Row>
-            </>
-          ) : (
-            <>
-              <Row
-                className="align-items-center py-3"
-                style={{ backgroundColor: "#f8f9fa", borderRadius: "8px" }}
-              >
-                <Col className="text-center">
-                  <h1
-                    style={{
-                      fontSize: "2rem",
-                      fontWeight: "bold",
-                      color: "#343a40",
-                    }}
-                  >
-                    {Ven.obra.cliente ? Ven.obra.cliente.nombre : null}
-                  </h1>
-                </Col>
-                <Col className="text-center">
-                  <h3
-                    style={{
-                      fontSize: "1.5rem",
-                      fontWeight: "500",
-                      color: "#495057",
-                    }}
-                  >
-                    Instalación:{" "}
-                    {Ven.fechaInstalacion
-                      ? Ven.fechaInstalacion
-                      : "A confirmar"}
-                  </h3>
-                </Col>
-                <Col className="text-center">
-                  {Ven.obra && (
-                    <h3
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "500",
-                        color: "#495057",
-                      }}
-                    >
-                      Obra: {Ven.obra.nombre}
-                    </h3>
-                  )}
-                </Col>
-                <Col className="text-center">
-                  {ConfirmPaso ? 
-                  <></>
-                  :
-                  <Button variant="primary" onClick={() => setEditVen(true)}>
-                    Editar
-                  </Button>
-                  }
-                </Col>
-              </Row>
-            </>
-          )}
-
-          {Rollers.length > 0 && (
-            <>
-              <Table responsive bordered>
-                <thead
-                  style={{
-                    justifyContent: "center",
-                    fontFamily: "Arial, sans-serif",
-                  }}
-                >
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Num</th>
-                    <th>Ambiente</th>
-                    <th>Tela</th>
-                    <th>Color</th>
-                    <th>Ancho AF-AF</th>
-                    <th>Ancho tela</th>
-                    <th>Ancho Caño</th>
-                    <th>Caño</th>
-                    <th>Alto Cortina</th>
-                    <th>Alto Tela</th>
-                    <th>Cant</th>
-                    <th>Largo Cadena</th>
-                    <th>Cadena</th>
-                    <th>Lado Cadena</th>
-                    <th>Posición</th>
-                    <th>Motorizado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Rollers.map((Cor) => (
-                    <tr key={Cor.idRoller} onClick={() => handleShow(Cor)}>
-                      <td>{Cor.nombre}</td>
-                      <td>{Cor.numeroArticulo}</td>
-                      <td>{Cor.Ambiente}</td>
-                      <td>{findTela(Cor.IdTipoTela)?.nombre || null}</td>
-                      <td>{findTela(Cor.IdTipoTela)?.color}</td>
-                      <td>{Cor.ancho?.toFixed(3)}</td>
-                      <td>{Cor.AnchoTela?.toFixed(3)}</td>
-                      <td>{Cor.AnchoTubo?.toFixed(3)}</td>
-                      <td>{findNameCano(Cor.cano?.id)}</td>
-                      <td>{Cor.alto?.toFixed(3)}</td>
-                      <td>{Cor.AltoTela?.toFixed(3)}</td>
-                      <td>1</td>
-                      <td>{Cor.LargoCadena?.toFixed(3)}</td>
-                      <td>
-                        {findNameTipoCadena(Cor.tipoCadena?.idTipoCadena)}
-                      </td>
-                      <td>{findNameLadoCadena(Cor.ladoCadena?.ladoId)}</td>
-                      <td>{findNamePos(Cor.posicion?.posicionId)}</td>
-                      <td>{findNameMotor(Cor.motorRoller?.idMotor)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </>
-          )}
-
-          {Rieles.length !== 0 ? (
-            <>
-              <Table responsive bordered>
-                <thead
-                  style={{
-                    justifyContent: "center",
-                    fontFamily: "Arial, sans-serif",
-                  }}
-                >
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Num</th>
-                    <th>Ambiente</th>
-                    <th>Ancho</th>
-                    <th>Tipo de Riel</th>
-                    <th>Soporte</th>
-                    <th>Bastones</th>
-                    <th>Acumula</th>
-                    <th>Detalle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Rieles.map((Cor) => (
-                    <tr key={Cor.idCortina} onClick={() => handleShow(Cor)}>
-                      <td>{Cor.nombre}</td>
-                      <td>{Cor.numeroArticulo}</td>
-                      <td>{Cor.ambiente}</td>
-                      <td>{Cor.ancho}</td>
-                      <td>{findNameTipoRiel(Cor.tipoRiel.tipoId)}</td>
-                      <td>{Cor.soportes.nombre}</td>
-                      <td>{Cor.bastones.nombre}</td>
-                      <td>
-                        {findNameladoAcumula(Cor.ladoAcumula.ladoAcumulaId)}
-                      </td>
-                      <td>{Cor.detalle}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </>
-          ) : null}
-          {Tradicionales.length > 0 && (
-            <Table responsive bordered>
-              <thead
+          <Row
+            className="align-items-center py-3"
+            style={{ backgroundColor: "#f8f9fa", borderRadius: "8px" }}
+          >
+            <Col className="text-center">
+              <h1
                 style={{
-                  justifyContent: "center",
-                  fontFamily: "Arial, sans-serif",
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  color: "#343a40",
                 }}
               >
-                <tr>
-                  <th>Tipo</th>
-                  <th>Num</th>
-                  <th>Ambiente</th>
-                  <th>Tela</th>
-                  <th>Color</th>
-                  <th>Pinza</th>
-                  <th>Gancho</th>
-                  <th>Paños</th>
-                  <th>Dobladillo</th>
-                  <th>Ancho</th>
-                  <th>Ancho Izquierdo</th>
-                  <th>Ancho Derecho</th>
-                  <th>Alto</th>
-                  <th>Alto Izquierdo</th>
-                  <th>Alto Derecho</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Tradicionales.map((tradi) => (
-                  <tr
-                    key={tradi.numeroArticulo}
-                    onClick={() => handleShow(tradi)}
-                  >
-                    <td>{tradi.nombre}</td>
-                    <td>{tradi.numeroArticulo}</td>
-                    <td>{tradi.Ambiente}</td>
-                    <td>{findTelaTradi(tradi.IdTipoTela)?.nombre}</td>
-                    <td>{findTelaTradi(tradi.IdTipoTela)?.color}</td>
-                    <td>{findNameTipoPinza(tradi.Pinza?.idPinza)}</td>
-                    <td>{findNameTipoGancho(tradi.ganchos?.idGanchos)}</td>
-                    <td>{tradi.cantidadPanos}</td>
-                    <td>
-                      {findNameTipoDobladillo(tradi.Dobladillo?.idDobladillo)}
-                    </td>
-                    <td>{tradi.cantidadPanos === 1 ? tradi.ancho : ""}</td>
-                    <td>{tradi.cantidadPanos !== 1 ? tradi.ancho : ""}</td>
-                    <td>
-                      {tradi.cantidadPanos !== 1 ? tradi.AnchoDerecho : ""}
-                    </td>
-                    <td>{tradi.CantidadAltos == 1 ? tradi.alto : ""}</td>
-                    <td>{tradi.CantidadAltos !== 1 ? tradi.alto : ""}</td>
-                    <td>
-                      {tradi.CantidadAltos !== 1 ? tradi.AltoDerecho : ""}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-
-          )}
-          
-          {Romanas.length !== 0 && (
-            <>
-              <Table responsive bordered className="table-romanas">
-                <thead>
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Num</th>
-                    <th>Ambiente</th>
-                    <th>Tela</th>
-                    <th>Color</th>
-                    <th>Ancho</th>
-                    <th>Ancho varilla y contrapeso</th>
-                    <th>Alto</th>
-                    <th>Caídas</th>
-                    <th>Lado</th>
-                    <th>Largo Cadena</th>
-                    <th>Varillas</th>
-                    <th>Dist Varillas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Romanas.map((romana) => (
-                    <tr key={romana.numeroArticulo}>
-                      <td>{romana.nombre}</td>
-                      <td>{romana.numeroArticulo}</td>
-                      <td>{romana.Ambiente}</td>
-                      <td>{findTelaTradi(romana.IdTipoTela)?.nombre}</td>
-                      <td>{findTelaTradi(romana.IdTipoTela)?.color}</td>
-                      <td>{romana.ancho?.toFixed(3)}</td>
-                      <td>{romana.anchoVarilla?.toFixed(3)}</td>
-                      <td>{romana.alto?.toFixed(3)}</td>
-                      <td>{romana.caidas}</td>
-                      <td>{findNameLadoCadena(romana.ladoCadena?.ladoId)}</td>
-                      <td>
-                        {(romana.factorLargoCadena * romana.alto).toFixed(3)}
-                      </td>
-                      <td>{romana.cantvarillas}</td>
-                      <td>{romana.distanciavarillas}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </>
-          )}
-          <Row style={{ width: "100%" }}>
-            {showModEditVenal && (
-              <Button
-                variant="primary"
-                onClick={() => callBackAddArt()}
-                style={{ margin: "10px" }}
+                {Ven.obra.cliente ? Ven.obra.cliente.nombre : null}
+              </h1>
+            </Col>
+            <Col className="text-center">
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "500",
+                  color: "#495057",
+                }}
               >
-                Agregar Articulos
-              </Button>
-            )}
-          </Row>
-          <Row>
-            <Col className="d-flex justify-content-center">
-              <Button variant="primary" onClick={DescPdf}>
-                Orden Produccion
-              </Button>
+                Instalación: {ObtenerFecha(Ven.fechaInstalacion)}
+              </h3>
             </Col>
-            <Col className="d-flex justify-content-center">
-              <Button
-                variant="primary"
-                onClick={downloadTicket}
-                className="w-auto"
-              >
-                Tickets
-              </Button>
+            <Col className="text-center">
+              {Ven.obra.nombre && (
+                <h3
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "500",
+                    color: "#495057",
+                  }}
+                >
+                  Obra: {Ven.obra.nombre}
+                </h3>
+              )}
             </Col>
-            {ConfirmPaso ? 
-                  <Col className="d-flex justify-content-center">
-                </Col>
-                  :
-            <Col className="d-flex justify-content-center">
-              <Button variant="primary" onClick={DescPdfInstalacion}>
-                Orden Instalacion
-              </Button>
-            </Col>
-          }
           </Row>
         </>
       )}
+      {Rollers.length > 0 && (
+        <>
+          <Table responsive bordered>
+            <thead
+              style={{
+                justifyContent: "center",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              <tr>
+                <th>Tipo</th>
+                <th>Num</th>
+                <th>Ambiente</th>
+                <th>Tela</th>
+                <th>Color</th>
+                <th>Ancho tela</th>
+                <th>Alto Tela</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Rollers.map((Cor) => (
+                <tr key={Cor.idRoller} onClick={() => handleShow(Cor)}>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {Cor.nombre}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {Cor.numeroArticulo}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {Cor.Ambiente}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {findTela(Cor.IdTipoTela)?.nombre || null}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {findTela(Cor.IdTipoTela)?.color}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {Cor.AnchoTela?.toFixed(3)}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {Cor.AltoTela?.toFixed(3)}
+                  </td>
+                  <td className={findTerminada(Cor.IdArticulo) && "ter"}>
+                    {findTerminada(Cor.IdArticulo)
+                      ? "terminada"
+                      : "sin terminar"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </>
+      )}
+
+      {Romanas.length !== 0 && (
+        <>
+          <Table responsive bordered className="table-romanas">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Num</th>
+                <th>Ambiente</th>
+                <th>Tela</th>
+                <th>Color</th>
+                <th>Ancho</th>
+                <th>Ancho varilla y contrapeso</th>
+                <th>Alto</th>
+                <th>Caídas</th>
+                <th>Lado</th>
+                <th>Largo Cadena</th>
+                <th>Varillas</th>
+                <th>Dist Varillas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Romanas.map((romana) => (
+                <tr key={romana.numeroArticulo}>
+                  <td>{romana.nombre}</td>
+                  <td>{romana.numeroArticulo}</td>
+                  <td>{romana.Ambiente}</td>
+                  <td>{findTelaTradi(romana.IdTipoTela)?.nombre}</td>
+                  <td>{findTelaTradi(romana.IdTipoTela)?.color}</td>
+                  <td>{romana.ancho?.toFixed(3)}</td>
+                  <td>{romana.anchoVarilla?.toFixed(3)}</td>
+                  <td>{romana.alto?.toFixed(3)}</td>
+                  <td>{romana.caidas}</td>
+                  <td>{findNameLadoCadena(romana.ladoCadena?.ladoId)}</td>
+                  <td>{(romana.factorLargoCadena * romana.alto).toFixed(3)}</td>
+                  <td>{romana.cantvarillas}</td>
+                  <td>{romana.distanciavarillas}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </>
+      )}
+      <Row>
+        <Col className="d-flex justify-content-center">
+          <Button variant="primary" onClick={DescPdf}>
+            Orden
+          </Button>
+        </Col>
+        <Col className="d-flex justify-content-center">
+          <Button variant="primary" onClick={downloadTicket} className="w-auto">
+            Tickets
+          </Button>
+        </Col>
+      </Row>
     </>
   );
 };
