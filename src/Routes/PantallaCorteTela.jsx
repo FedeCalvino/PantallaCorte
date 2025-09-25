@@ -151,6 +151,7 @@ export const PantallaCorteTela = () => {
   };
 
   const FetchOrdenes = async () => {
+    
     const data = await fetch("/OrdenEp/PantallaCorte");
     const response = await data.json();
     console.log("response ordenes", response);
