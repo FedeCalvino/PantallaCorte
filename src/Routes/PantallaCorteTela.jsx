@@ -151,7 +151,7 @@ export const PantallaCorteTela = () => {
   };
 
   const FetchOrdenes = async () => {
-    const data = await fetch("http://localhost:8085/Orden/PantallaCorte");
+    const data = await fetch("/OrdenEp/PantallaCorte");
     const response = await data.json();
     console.log("response ordenes", response);
     setOrdenes(response.body);
@@ -164,7 +164,7 @@ export const PantallaCorteTela = () => {
 
   const connect = () => {
     const client = new Client({
-      brokerURL: 'ws://localhost:8085/OrdenesSocket', 
+      brokerURL: 'ws://200.40.89.254:8088/OrdenesSocket', 
       reconnectDelay: 5000, 
       debug: (msg) => console.log(msg), 
       onConnect: () => {
