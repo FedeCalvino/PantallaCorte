@@ -877,10 +877,7 @@ export const VentaViewPantallaCorte = ({
                       <td>
                         {findNamePos(CortrtinaTrtyEdited.posicion.posicionId)}
                       </td>
-                      <td>
-                        {findNameMotor(CortrtinaTrtyEdited.motorRoller.idMotor)}
-                      </td>
-                      <td>{CortrtinaTrtyEdited.Exterior ? "Sí" : "No"}</td>
+                      
                     </tr>
                   )}
                 </tbody>

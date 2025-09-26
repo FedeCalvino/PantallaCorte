@@ -48,15 +48,17 @@ export const PantallaCorteTela = () => {
   const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
   const [loadingVenta, setLoadingVenta] = useState(false);
   const [Ordenes, setOrdenes] = useState([]);
-  
+
     const UrlVentas = "/VentasEP/Activas";
     const UrlVenta = "/VentasEP/";
-/*
+    const OrdenesUrl ="/OrdenEp/PantallaCorte"
 
+/*
   const UrlVentas = "http://200.40.89.254:8081/Ventas/Activas";
   const UrlVenta = "http://200.40.89.254:8088/Ventas/";
   const UrlDelete = "http://200.40.89.254:8088/Ventas/";
-*/
+  const OrdenesUrl ="http://200.40.89.254:8081/Orden/PantallaCorte"
+  */
   const setVentaView = async (Venta) => {
     setLoadingVenta(true);
     console.log(ConfigRoller);
@@ -152,7 +154,7 @@ export const PantallaCorteTela = () => {
 
   const FetchOrdenes = async () => {
     
-    const data = await fetch("/OrdenEp/PantallaCorte");
+    const data = await fetch(OrdenesUrl);
     const response = await data.json();
     console.log("response ordenes", response);
     setOrdenes(response.body);

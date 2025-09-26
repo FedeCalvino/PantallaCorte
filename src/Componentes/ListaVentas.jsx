@@ -31,7 +31,7 @@ export const ListaVentas = ({ ventas, onSelectVenta, selectedVentaId }) => (
       >
         <Row className="align-items-center">
           <Col className="col-8">
-          <div style={{ fontSize: "20px" }} className="fw-bold">
+          <div style={{ fontSize: "30px" }} className="fw-bold">
             {Ven.obra.cliente?.nombre}
           </div>
           <div className="text-muted">{Ven.obra.nombre && Ven.obra.nombre}</div>
