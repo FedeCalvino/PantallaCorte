@@ -541,7 +541,7 @@ export const VentaViewPantallaCorte = ({
     const idPasoOrden = findOrden(CortrtinaTrtyEdited.IdArticulo).idPasoOrden;
     console.log("idPasoOrden", idPasoOrden);
     const url =
-      "/OrdenEp/PasoOrden/Completar/" + idPasoOrden;
+      "http://200.40.89.254:8081/Orden/PasoOrden/Completar/" + idPasoOrden;
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -565,7 +565,7 @@ export const VentaViewPantallaCorte = ({
     const idPasoOrden = findOrden(CortrtinaTrtyEdited.IdArticulo).idPasoOrden;
     console.log("idPasoOrden", idPasoOrden);
     const url =
-      "/OrdenEp/PasoOrden/DesCompletar/" + idPasoOrden;
+      "http://200.40.89.254:8081/Orden/PasoOrden/DesCompletar/" + idPasoOrden;
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
